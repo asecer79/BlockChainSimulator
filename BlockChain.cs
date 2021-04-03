@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace BlockChain
 {
@@ -10,8 +11,6 @@ namespace BlockChain
             //initializing
             Chain = new List<Block> { CreateGenesisBlock() };
         }
-
-        public int Difficulty { get; set; } = 0;
 
         private List<Block> Chain { get; }
 
@@ -24,13 +23,14 @@ namespace BlockChain
 
             var block = new
                 Block(
+                    difficulty:0,
                     index: index,
                     timeStamp: timeStamp,
                     data: data,
                     previousHash: previousHash
                 );
 
-            block.PrintMinedHashInfo(Difficulty);
+            block.PrintMinedHashInfo();
             return block;
         }
 
@@ -39,12 +39,33 @@ namespace BlockChain
             return Chain[^1];
 
         }
-
-        public void AddNewBlock(Block newBLock)
+        private void AddNewBlock(Block newBLock)
         {
             newBLock.PreviousHash = this.GetLatestBlock().Hash;
-            newBLock.MineBlock(Difficulty);  //find block with desired difficulty
+            newBLock.MineBlock();  //find block with desired difficulty
             this.Chain.Add(newBLock);
+        }
+
+        public void StartMining(int numberOfBlockToBeMined, int difficulty)
+        {
+            for (var i = 1; i <= numberOfBlockToBeMined; i++)
+            {
+                this.AddNewBlock
+                (
+                    new Block
+                    (
+                        difficulty: difficulty,
+                        index: i,
+                        timeStamp: DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + "." + DateTime.Now.Ticks,
+                        data: new BlockTransactionData()
+                        {
+                            Seller = RandomString(5),
+                            Buyer = RandomString(5),
+                            Amount = new Random().Next(1, 50)
+                        }
+                    )
+                );
+            }
         }
 
         public bool ChainValidator()
@@ -70,6 +91,26 @@ namespace BlockChain
             }
 
             return true;
+        }
+
+        private static string RandomString(int size, bool lowerCase = false)
+        {
+            var builder = new StringBuilder(size);
+
+            var random = new Random();
+
+            var offset = lowerCase ? 'a' : 'A';
+
+            const int lettersOffset = 26; // A...Z or a..z: length=26  
+
+            for (var i = 0; i < size; i++)
+            {
+                var @char = (char)random.Next(offset, offset + lettersOffset);
+
+                builder.Append(@char);
+            }
+
+            return lowerCase ? builder.ToString().ToLower() : builder.ToString();
         }
     }
 }

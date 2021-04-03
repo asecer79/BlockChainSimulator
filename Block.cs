@@ -8,27 +8,30 @@ namespace BlockChain
 {
     internal class Block
     {
-        private long Index { get;}
+        private int Difficulty { get; }
+        private long Index { get; }
         private string TimeStamp { get; }
         private object Data { get; }
         public string PreviousHash { get; set; }
-        public string Hash { get; private set;}
         private int Nonce { get; set; } //for desired hash is less than difficulty
+        public string Hash { get; private set; }
 
-        public Block(long index, string timeStamp, BlockTransactionData data, string previousHash = "")
+        public Block(int difficulty, long index, string timeStamp, BlockTransactionData data, string previousHash = "")
         {
+            Difficulty = difficulty;
+
             this.Index = index;
             this.TimeStamp = timeStamp;
             this.Data = JsonConvert.SerializeObject(data);
             this.PreviousHash = previousHash;
-            this.Hash =  CalculateHash(); //initial hash, will be changed according to difficulty
+            this.Hash = CalculateHash(); //initial hash, will be changed according to difficulty
 
 
         }
 
         public string CalculateHash()
         {
-            var rawData = $"{this.Index}{this.PreviousHash}{this.TimeStamp}{this.Data}{Nonce}";
+            var rawData = $"{this.Index}{this.PreviousHash}{this.TimeStamp}{this.Data}{Nonce}{Difficulty}";
 
             using var sha256Hash = SHA256.Create();
 
@@ -43,27 +46,27 @@ namespace BlockChain
             return hashedData.ToString();
         }
 
-        public void MineBlock(int difficulty)
+        public void MineBlock()
         {
             var target = "";
 
-            for (var i = 0; i < difficulty; i++) target += "0";
+            for (var i = 0; i < Difficulty; i++) target += "0";
             this.Hash = this.CalculateHash();//initialize hash
 
             Console.WriteLine($"Mining new block......");
-            while (Hash.Substring(0, difficulty) != target)
+            while (Hash.Substring(0, Difficulty) != target)
             {
                 this.Nonce++;
                 this.Hash = this.CalculateHash();
             }
 
-            PrintMinedHashInfo(difficulty);
+            PrintMinedHashInfo();
         }
 
-        public void PrintMinedHashInfo(int difficulty)
+        public void PrintMinedHashInfo()
         {
             Console.WriteLine($"Index        : {this.Index}");
-            Console.WriteLine($"Difficulty   : {difficulty}");
+            Console.WriteLine($"Difficulty   : {Difficulty}");
             Console.WriteLine($"Nonce        : {this.Nonce}");
             Console.WriteLine($"TimeStamp    : {this.TimeStamp}");
             Console.WriteLine($"Data         : {this.Data}");
