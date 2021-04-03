@@ -23,9 +23,9 @@ namespace BlockChain
                 (
                     new Block
                     (
-                        i,
-                        DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + "." + DateTime.Now.Ticks,
-                        new BlockTransactionData()
+                       index: i,
+                       timeStamp: DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + "." + DateTime.Now.Ticks,
+                       data: new BlockTransactionData()
                         {
                             Seller = RandomString(5),
                             Buyer = RandomString(5),
