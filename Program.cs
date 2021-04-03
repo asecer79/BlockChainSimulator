@@ -13,15 +13,18 @@ namespace BlockChain
         static void Main(string[] args)
         {
             BlockChain chain = new BlockChain();
+            chain.dificulty = 6;
 
-            for (int i = 1; i <= 100; i++)
+            int numberOfBlockToBeMine = 5;
+
+            for (int i = 1;i<= numberOfBlockToBeMine; i++)
             {
                 chain.AddNewBlock
                 (
                     new Block
                     (
                         i,
-                        DateTime.Now.ToShortDateString(),
+                        DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + "." + DateTime.Now.Ticks,
                         new BlockTransactionData()
                         {
                             Seller = RandomString(5),
@@ -31,22 +34,9 @@ namespace BlockChain
                     )
                 );
             }
-            
 
 
-         
-
-
-            foreach (var block in chain.chain)
-            {
-                Console.WriteLine($"Index        : {block._index}");
-                Console.WriteLine($"Data         : {block._data}");
-                Console.WriteLine($"Previous Hash: {block._previousHash}");
-                Console.WriteLine($"Hash         : {block._hash}");
-                Console.WriteLine("\n----------------\n");
-            }
-
-            Console.WriteLine("Chain Validation: " +chain.ChainValidator());
+            Console.WriteLine("Chain Validation: " + chain.ChainValidator());
 
 
             //test for attack
@@ -94,6 +84,7 @@ namespace BlockChain
         public object _data;
         public string _previousHash;
         public string _hash;
+        public int _nonce = 0; //for desired hash is less than difficulty
 
         public Block(long index, string timeStamp, BlockTransactionData data, string previousHash = "")
         {
@@ -112,7 +103,7 @@ namespace BlockChain
 
         public string CalculateHash()
         {
-            var rawData = $"{this._index}{this._previousHash}{this._timeStamp}{this._data}";
+            var rawData = $"{this._index}{this._previousHash}{this._timeStamp}{this._data}{_nonce}";
 
             using (SHA256 sha256Hash = SHA256.Create())
             {
@@ -132,6 +123,31 @@ namespace BlockChain
 
         }
 
+        public void MineBlock(int difficulty)
+        {
+            var target = "";
+            for (int i = 0; i < difficulty; i++) target += "0";
+            this._hash = this.CalculateHash();//initialize hash
+
+            Console.WriteLine($"Mining new block......");
+            while (_hash.Substring(0, difficulty) != target)
+            {
+                this._nonce++;
+                this._hash = this.CalculateHash();
+            }
+
+            Console.WriteLine($"Index        : {this._index}");
+            Console.WriteLine($"Difficulty   : {difficulty}");
+            Console.WriteLine($"Nonce        : {this._nonce}");
+            Console.WriteLine($"TimeStamp    : {this._timeStamp}");
+            Console.WriteLine($"Data         : {this._data}");
+            Console.WriteLine($"Previous Hash: {this._previousHash}");
+            Console.WriteLine($"Hash         : {this._hash}");
+            Console.WriteLine($"Block Mined  : ({_index})\n");
+            Console.WriteLine($"----------------------------------------------------------------");
+
+
+        }
 
     }
 
@@ -143,12 +159,18 @@ namespace BlockChain
             chain = new List<Block> { CreateGenesisBlock() };
         }
 
+        public int dificulty = 0;
         public List<Block> chain;
 
         Block CreateGenesisBlock() //default first starting block
         {
-            return new Block(index: 0, timeStamp: DateTime.Now.ToLongDateString(), data: new BlockTransactionData() { Amount = 0, Seller = "Genesis Block", Buyer = "Genesis Block" },
-                previousHash: "0");
+            return new
+                Block(
+                    index: 0,
+                    timeStamp: DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + "." + DateTime.Now.Ticks,
+                    data: new BlockTransactionData() { Amount = 0, Seller = "Genesis Block", Buyer = "Genesis Block" },
+                    previousHash: "0"
+                );
         }
 
         Block GetLatestBlock()
@@ -160,7 +182,7 @@ namespace BlockChain
         public void AddNewBlock(Block newBLock)
         {
             newBLock._previousHash = this.GetLatestBlock()._hash;
-            newBLock._hash = newBLock.CalculateHash();
+            newBLock.MineBlock(dificulty);  //find block with desired difficulty
             this.chain.Add(newBLock);
         }
 
@@ -171,7 +193,7 @@ namespace BlockChain
                 var previousBlock = chain[i - 1];
                 var currentBlock = chain[i];
 
-                if (currentBlock._hash!=currentBlock.CalculateHash())
+                if (currentBlock._hash != currentBlock.CalculateHash())
                 {
                     return false;
                 }
