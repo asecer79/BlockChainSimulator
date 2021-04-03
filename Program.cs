@@ -13,9 +13,9 @@ namespace BlockChain
         static void Main(string[] args)
         {
             BlockChain chain = new BlockChain();
-            chain.dificulty = 6;
+            chain.dificulty = 4;
 
-            int numberOfBlockToBeMine = 5;
+            int numberOfBlockToBeMine = 1000;
 
             for (int i = 1;i<= numberOfBlockToBeMine; i++)
             {
